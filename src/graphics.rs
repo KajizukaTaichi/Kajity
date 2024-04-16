@@ -1,4 +1,4 @@
-use minifb::{Key, Window, WindowOptions};
+use minifb::{Window, WindowOptions};
 
 pub struct Game {
     window: Window,
@@ -27,22 +27,26 @@ impl Game {
     }
 
     pub fn run(&mut self) {
-        while self.window.is_open() && !self.window.is_key_down(Key::Escape) {
-            // ウィンドウを更新
-            self.window.update_with_buffer(&self.buffer as &[u32], self.window.get_size().0, self.window.get_size().1).unwrap();
-    
-            // 60FPSで待機
-            std::thread::sleep(std::time::Duration::from_secs(1) / 60);
+        while self.window.is_open() {
+            let size = self.window.get_size();
+            let _ = self.window.update_with_buffer(&self.buffer, size.0, size.1);
         }
     }    
 
-    pub fn draw<F>(&mut self, mut f: F)
-    where
-        F: FnMut(&mut [u32], usize, usize),
-    {
-        let size = self.window.get_size();
-        let mut buffer: Vec<u32> = vec![0; size.0 * size.1];
-        f(&mut buffer, size.0, size.1);
+    pub fn draw(&mut self, color: u32, start: (usize, usize), end:(usize, usize)) {
+        let (width ,height) = self.window.get_size();
+        let mut buffer: Vec<u32> = self.buffer.clone();
+        
+        for y in start.1..=end.1 {
+            for x in start.0..=end.0 {
+                if x < width && y < height {
+                    let index = y * width + x;
+                    buffer[index] = color;
+                }
+            }
+        }
+        
+        self.window.update_with_buffer(&self.buffer, width, height).unwrap();
         self.buffer = buffer.clone();
     }
 }
